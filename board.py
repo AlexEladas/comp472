@@ -1,4 +1,5 @@
 from cell import Cell
+import operator
 
 
 class Board:
@@ -69,6 +70,15 @@ class Board:
                 else:
                     return False
 
+    def move(self, move, player):
+        x, y = move.split(" ", 1)
+        currenty = self.MAP[x[0]]
+        currentx = int(x[1]) - 1
+        nexty = self.MAP[y[0]]
+        nextx = int(y[1]) - 1
+        self.board[currenty][currentx].token = ""
+        self.board[nexty][nextx].token = player.colour
+
     def check_if_attacking_move(self, move, player):
         x, y = move.split(" ", 1)
         currenty = self.MAP[x[0]]
@@ -76,85 +86,204 @@ class Board:
         nexty = self.MAP[y[0]]
         nextx = int(y[1]) - 1
 
-        if self.board[currenty][currentx].cell_colour == "b":
-            if currentx != nextx and currenty != nexty:
-                if nextx > currentx and nexty > currenty:
-                    if currenty != 4 and nextx != 8:
-                        if self.board[currenty + 1][nextx + 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currenty != 0 and currentx != 0:
-                        if self.board[currenty - 1][currentx - 1].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-                if nextx > currentx and nexty < currenty:
-                    if nexty != 0 and nextx != 8:
-                        if self.board[nexty - 1][nextx + 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currenty != 0 and nextx != 0:
-                        if self.board[currenty - 1][nextx - 1].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-                if nextx < currentx and nexty < currenty:
-                    if nexty != 0 and nextx != 8:
-                        if self.board[nexty - 1][nextx + 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if self.board[currenty + 1][currentx + 1].token != player.colour:
-                        if currenty != 4 and currentx != 8:
-                            player.attack_type = "backward"
-                            return True
-                if nextx < currentx and nexty > currenty:
-                    if nexty != 4 and nextx != 0:
-                        if self.board[nexty + 1][nextx - 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currenty != 0 and nextx != 8:
-                        if self.board[currenty - 1][nextx + 1].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-        else:
-            if currenty == nexty:
-                if nextx > currentx:
-                    if nextx != 8:
-                        if self.board[currenty][nextx + 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currentx != 0:
-                        if self.board[currenty][currentx - 1].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-                elif nextx < currentx:
-                    if nextx != 0:
-                        if self.board[currenty][nextx - 1].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currentx != 8:
-                        if self.board[currenty][currentx + 1].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-            elif currentx == nextx:
-                if nexty > currenty:
-                    if nexty != 4:
-                        if self.board[nexty + 1][currentx].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currenty != 0:
-                        if self.board[currenty - 1][currentx].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
-                if nexty < currenty:
-                    if nexty != 0:
-                        if self.board[nexty - 1][currentx].token != player.colour:
-                            player.attack_type = "forward"
-                            return True
-                    if currenty != 4:
-                        if self.board[currenty + 1][currentx].token != player.colour:
-                            player.attack_type = "backward"
-                            return True
+        if currentx != nextx and currenty != nexty:
+            if nextx > currentx and nexty > currenty:
+                if currenty != 4 and nextx != 8:
+                    if self.board[nexty + 1][nextx + 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currenty != 0 and currentx != 0:
+                    if self.board[currenty - 1][currentx - 1].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+            if nextx > currentx and nexty < currenty:
+                if nexty != 0 and nextx != 8:
+                    if self.board[nexty - 1][nextx + 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currenty != 0 and nextx != 0:
+                    if self.board[currenty + 1][currentx - 1].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+            if nextx < currentx and nexty < currenty:
+                if nexty != 0 and nextx != 8:
+                    if self.board[nexty - 1][nextx - 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if self.board[currenty + 1][currentx + 1].token != player.colour:
+                    if currenty != 4 and currentx != 8:
+                        player.attack_type = "backward"
+                        return True
+            if nextx < currentx and nexty > currenty:
+                if nexty != 4 and nextx != 0:
+                    if self.board[nexty + 1][nextx - 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currenty != 0 and nextx != 8:
+                    if self.board[currenty - 1][nextx + 1].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+        if currenty == nexty:
+            if nextx > currentx:
+                if nextx != 8:
+                    if self.board[nexty][nextx + 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currentx != 0:
+                    if self.board[nexty][currentx - 1].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+            elif nextx < currentx:
+                if nextx != 0:
+                    if self.board[currenty][nextx - 1].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currentx != 8:
+                    if self.board[currenty][currentx + 1].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+        elif currentx == nextx:
+            if nexty > currenty:
+                if nexty != 4:
+                    if self.board[nexty + 1][nextx].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currenty != 0:
+                    if self.board[currenty - 1][currentx].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
+            if nexty < currenty:
+                if nexty != 0:
+                    if self.board[nexty - 1][currentx].token != player.colour:
+                        player.attack_type = "forward"
+                        return True
+                if currenty != 4:
+                    if self.board[currenty + 1][currentx].token != player.colour:
+                        player.attack_type = "backward"
+                        return True
         player.attack_type = "defensive"
         return False
 
-    def attack(self):
-        pass
+    def attack(self, move, player):
+        x, y = move.split(" ", 1)
+        currenty = self.MAP[x[0]]
+        currentx = int(x[1]) - 1
+        nexty = self.MAP[y[0]]
+        nextx = int(y[1]) - 1
+        i = 1
+        if player.attack_type == "forward":
+
+            if nextx > currentx and nexty > currenty:
+                while (nexty + i) < 5 and (nextx + i) < 9:
+                    if self.board[nexty + i][nextx + i].token == player.opponent:
+                        self.board[nexty + i][nextx + i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx > currentx and nexty < currenty:
+                while (nexty - i) >= 0 or (nextx + i) < 9:
+                    if self.board[nexty - i][nextx + i].token == player.opponen:
+                        self.board[nexty - i][nextx + i].token = ""
+                    i += 1
+            elif nextx < currentx and nexty < currenty:
+                while (nexty - i) >= 0 or (nextx - i) >= 0:
+                    if self.board[nexty - i][nextx - i].token == player.opponent:
+                        self.board[nexty - i][nextx - i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx < currentx and nexty > currenty:
+                while (nexty + i) < 5 or (nextx - i) >= 0:
+                    if self.board[nexty + i][nextx - i].token == player.opponent:
+                        self.board[nexty + i][nextx - i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx > currentx:
+                while (nextx + i) < 9:
+                    if self.board[nexty][nextx + i].token == player.opponent:
+                        self.board[nexty][nextx + i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx < currentx:
+                while (nextx - i) >= 0:
+                    if self.board[nexty][nextx - i].token == player.opponent:
+                        self.board[nexty][nextx - i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nexty > currenty:
+                while (nexty + i) < 5:
+                    if self.board[nexty + i][nextx].token == player.opponent:
+                        self.board[nexty + i][nextx].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nexty < currenty:
+                while (currenty + i) >= 0:
+                    if self.board[nexty - i][nextx].token == player.opponent:
+                        self.board[nexty - i][nextx].token = ""
+                    else:
+                        break
+                    i += 1
+
+        if player.attack_type == "backward":
+            if nextx > currentx and nexty > currenty:
+                while (nexty - i) >= 0 and (currentx - i) >= 0:
+                    if self.board[currenty - i][currentx - i].token == player.opponent:
+                        self.board[currenty - i][currentx - i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx > currentx and nexty < currenty:
+                while (currenty + i) < 5 and (currentx - i) >= 0:
+                    if self.board[currenty + i][currentx - i].token == player.opponent:
+                        self.board[currenty + i][currentx - i].token.token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx < currentx and nexty < currenty:
+                while (currenty + i) < 5 and (currentx + i) < 9:
+                    if self.board[currenty + i][currentx + i].token == player.opponent:
+                        self.board[currenty + i][currentx + i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx < currentx and nexty > currenty:
+                while (currenty - i) >= 0 and (currentx + i) < 9:
+                    if self.board[currenty - i][currentx + i].token == player.opponent:
+                        self.board[currenty - i][currentx + i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx > currentx:
+                while (currentx - i) >= 0:
+                    if self.board[currenty][currentx - i].token == player.opponent:
+                        self.board[currenty][currentx - i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nextx < currentx:
+                while (currentx + i) < 9:
+                    if self.board[currenty][currentx + i].token == player.opponent:
+                        self.board[currenty][currentx + i].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nexty > currenty:
+                while (currenty - i) >= 0:
+                    if self.board[currenty - i][currentx].token == player.opponent:
+                        self.board[currenty - i][currentx].token = ""
+                    else:
+                        break
+                    i += 1
+            elif nexty < currenty:
+                while (currenty + i) < 5:
+                    if self.board[currenty + i][currentx].token == player.opponent:
+                        self.board[currenty + i][currentx].token = ""
+                    else:
+                        break
+                    i += 1
+        else:
+            pass
