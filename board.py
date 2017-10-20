@@ -1,5 +1,6 @@
 from cell import Cell
 import operator
+import math
 from pprint import pprint
 
 
@@ -43,9 +44,9 @@ class Board:
     def check_if_valid(self, move, player):
         try:
             x, y = move.split(" ", 1)
-            currenty = self.MAP[x[0]]
+            currenty = self.MAP[x[0].upper()]
             currentx = int(x[1]) - 1
-            nexty = self.MAP[y[0]]
+            nexty = self.MAP[y[0].upper()]
             nextx = int(y[1]) - 1
             if self.board[currenty][currentx].token == " " or self.board[nexty][nextx].token != " " or self.board[currenty][currentx].token != player.colour:
                 return False
@@ -56,7 +57,7 @@ class Board:
                     else:
                         return False
                 else:
-                    if nextx == currentx:
+                    if nextx == currentx and nexty == (currenty + 1) or nexty == (currenty - 1):
                         return True
                     else:
                         return False
@@ -66,28 +67,28 @@ class Board:
                         return True
                     else:
                         return False
-                else:
+                elif abs(currenty - nexty) == 1:
                     if nextx == currentx or nextx == (currentx + 1) or nextx == (currentx - 1):
                         return True
                     else:
                         return False
-        except ValueError:
+        except (ValueError, KeyError):
             return False
 
     def move(self, move, player):
         x, y = move.split(" ", 1)
-        currenty = self.MAP[x[0]]
+        currenty = self.MAP[x[0].upper()]
         currentx = int(x[1]) - 1
-        nexty = self.MAP[y[0]]
+        nexty = self.MAP[y[0].upper()]
         nextx = int(y[1]) - 1
         self.board[currenty][currentx].token = " "
         self.board[nexty][nextx].token = player.colour
 
     def check_if_attacking_move(self, move, player):
         x, y = move.split(" ", 1)
-        currenty = self.MAP[x[0]]
+        currenty = self.MAP[x[0].upper()]
         currentx = int(x[1]) - 1
-        nexty = self.MAP[y[0]]
+        nexty = self.MAP[y[0].upper()]
         nextx = int(y[1]) - 1
 
         if currentx != nextx and currenty != nexty:
@@ -172,9 +173,9 @@ class Board:
     def attack(self, move, player):
         self.non_attacking_moves = 0
         x, y = move.split(" ", 1)
-        currenty = self.MAP[x[0]]
+        currenty = self.MAP[x[0].upper()]
         currentx = int(x[1]) - 1
-        nexty = self.MAP[y[0]]
+        nexty = self.MAP[y[0].upper()]
         nextx = int(y[1]) - 1
         i = 1
         if player.attack_type == "forward":
@@ -184,131 +185,131 @@ class Board:
                     if self.board[nexty + i][nextx + i].token == player.opponent:
                         self.board[nexty + i][nextx + i].token = " "
                     else:
-                        player.number_of_tokens -= i - 1
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
+
             elif nextx > currentx and nexty < currenty:
                 while (nexty - i) >= 0 or (nextx + i) < 9:
                     if self.board[nexty - i][nextx + i].token == player.opponent:
                         self.board[nexty - i][nextx + i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty < currenty:
                 while (nexty - i) >= 0 or (nextx - i) >= 0:
                     if self.board[nexty - i][nextx - i].token == player.opponent:
                         self.board[nexty - i][nextx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty > currenty:
                 while (nexty + i) < 5 or (nextx - i) >= 0:
                     if self.board[nexty + i][nextx - i].token == player.opponent:
                         self.board[nexty + i][nextx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx > currentx:
                 while (nextx + i) < 9:
                     if self.board[nexty][nextx + i].token == player.opponent:
                         self.board[nexty][nextx + i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx:
                 while (nextx - i) >= 0:
                     if self.board[nexty][nextx - i].token == player.opponent:
                         self.board[nexty][nextx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nexty > currenty:
                 while (nexty + i) < 5:
                     if self.board[nexty + i][nextx].token == player.opponent:
                         self.board[nexty + i][nextx].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nexty < currenty:
                 while (currenty + i) >= 0:
                     if self.board[nexty - i][nextx].token == player.opponent:
                         self.board[nexty - i][nextx].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
-
+                player.number_of_tokens -= i - 1
         if player.attack_type == "backward":
             if nextx > currentx and nexty > currenty:
                 while (nexty - i) >= 0 and (currentx - i) >= 0:
                     if self.board[currenty - i][currentx - i].token == player.opponent:
                         self.board[currenty - i][currentx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx > currentx and nexty < currenty:
                 while (currenty + i) < 5 and (currentx - i) >= 0:
                     if self.board[currenty + i][currentx - i].token == player.opponent:
                         self.board[currenty + i][currentx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty < currenty:
                 while (currenty + i) < 5 and (currentx + i) < 9:
                     if self.board[currenty + i][currentx + i].token == player.opponent:
                         self.board[currenty + i][currentx + i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty > currenty:
                 while (currenty - i) >= 0 and (currentx + i) < 9:
                     if self.board[currenty - i][currentx + i].token == player.opponent:
                         self.board[currenty - i][currentx + i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx > currentx:
                 while (currentx - i) >= 0:
                     if self.board[currenty][currentx - i].token == player.opponent:
                         self.board[currenty][currentx - i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nextx < currentx:
                 while (currentx + i) < 9:
                     if self.board[currenty][currentx + i].token == player.opponent:
                         self.board[currenty][currentx + i].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nexty > currenty:
                 while (currenty - i) >= 0:
                     if self.board[currenty - i][currentx].token == player.opponent:
                         self.board[currenty - i][currentx].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
             elif nexty < currenty:
                 while (currenty + i) < 5:
                     if self.board[currenty + i][currentx].token == player.opponent:
                         self.board[currenty + i][currentx].token = " "
                     else:
-                        player.number_of_tokens -= i
                         break
                     i += 1
+                player.number_of_tokens -= i - 1
         else:
             pass
 

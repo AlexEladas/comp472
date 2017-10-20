@@ -6,3 +6,4 @@ class Player:
         self.operationy = ""
         self.opponent = opponent
         self.number_of_tokens = 22
+        self.non_attacking_moves = 0
