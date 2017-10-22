@@ -18,7 +18,6 @@ while True:
 
     if board.check_if_attacking_move(move, player1):
         board.attack(move,player1)
-        print ("sup")
     board.display()
 
     if player1.number_of_tokens == 0:
