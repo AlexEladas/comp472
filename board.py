@@ -1,6 +1,4 @@
 from cell import Cell
-import operator
-import math
 from pprint import pprint
 
 
@@ -17,6 +15,7 @@ class Board:
           }
 
     def __init__(self):
+        self.non_attacking_moves = 0
         column = []
         for i in range(self.LENGTH):
             row = []
@@ -43,36 +42,35 @@ class Board:
 
     def check_if_valid(self, move, player):
         try:
-            x, y = move.split(" ", 1)
+            x, y = move.split(" ", 1)  # Parse Input
+            if len(x) > 2 or len(y) > 2:
+                return False
             currenty = self.MAP[x[0].upper()]
             currentx = int(x[1]) - 1
             nexty = self.MAP[y[0].upper()]
             nextx = int(y[1]) - 1
+
             if self.board[currenty][currentx].token == " " or self.board[nexty][nextx].token != " " or self.board[currenty][currentx].token != player.colour:
                 return False
             if self.board[currenty][currentx].cell_colour == "w":
                 if currenty == nexty:
-                    if nextx == (currentx + 1) or nextx == (currentx - 1):
+                    if abs(currentx - nextx) == 1:
                         return True
-                    else:
-                        return False
-                else:
-                    if nextx == currentx and nexty == (currenty + 1) or nexty == (currenty - 1):
+
+                elif nextx == currentx:
+                    if abs(currenty - nexty) == 1:
                         return True
-                    else:
-                        return False
+
             if self.board[currenty][currentx].cell_colour == "b":
                 if currenty == nexty:
-                    if nextx == (currentx + 1) or nextx == (currentx - 1):
+                    if abs(currentx - nextx) == 1:
                         return True
-                    else:
-                        return False
+
                 elif abs(currenty - nexty) == 1:
-                    if nextx == currentx or nextx == (currentx + 1) or nextx == (currentx - 1):
+                    if nextx == currentx or abs(currentx - nextx) == 1:
                         return True
-                    else:
-                        return False
-        except (ValueError, KeyError):
+            return False
+        except (ValueError, KeyError, IndexError):
             return False
 
     def move(self, move, player):
@@ -81,6 +79,7 @@ class Board:
         currentx = int(x[1]) - 1
         nexty = self.MAP[y[0].upper()]
         nextx = int(y[1]) - 1
+
         self.board[currenty][currentx].token = " "
         self.board[nexty][nextx].token = player.colour
 
@@ -93,7 +92,7 @@ class Board:
 
         if currentx != nextx and currenty != nexty:
             if nextx > currentx and nexty > currenty:
-                if currenty != 4 and nextx != 8:
+                if nexty != 4 and nextx != 8:  # border check
                     if self.board[nexty + 1][nextx + 1].token == player.opponent:
                         player.attack_type = "forward"
                         return True
@@ -106,17 +105,17 @@ class Board:
                     if self.board[nexty - 1][nextx + 1].token == player.opponent:
                         player.attack_type = "forward"
                         return True
-                if currenty != 0 and nextx != 0:
+                if currenty != 4 and currentx != 0:
                     if self.board[currenty + 1][currentx - 1].token == player.opponent:
                         player.attack_type = "backward"
                         return True
             if nextx < currentx and nexty < currenty:
-                if nexty != 0 and nextx != 8:
+                if nexty != 0 and nextx != 0:
                     if self.board[nexty - 1][nextx - 1].token == player.opponent:
                         player.attack_type = "forward"
                         return True
-                if self.board[currenty + 1][currentx + 1].token == player.opponent:
-                    if currenty != 4 and currentx != 8:
+                if currenty != 4 and currentx != 8:
+                    if self.board[currenty + 1][currentx + 1].token == player.opponent:
                         player.attack_type = "backward"
                         return True
             if nextx < currentx and nexty > currenty:
@@ -124,7 +123,7 @@ class Board:
                     if self.board[nexty + 1][nextx - 1].token == player.opponent:
                         player.attack_type = "forward"
                         return True
-                if currenty != 0 and nextx != 8:
+                if currenty != 0 and currentx != 8:
                     if self.board[currenty - 1][currentx + 1].token == player.opponent:
                         player.attack_type = "backward"
                         return True
@@ -167,7 +166,7 @@ class Board:
                         player.attack_type = "backward"
                         return True
         player.attack_type = "defensive"
-        player.non_attacking_moves += 1
+        self.non_attacking_moves += 1
         return False
 
     def attack(self, move, player):
@@ -177,11 +176,11 @@ class Board:
         currentx = int(x[1]) - 1
         nexty = self.MAP[y[0].upper()]
         nextx = int(y[1]) - 1
+
         i = 1
         if player.attack_type == "forward":
-
             if nextx > currentx and nexty > currenty:
-                while (nexty + i) < 5 and (nextx + i) < 9:
+                while (nexty + i) < 5 and (nextx + i) < 9:  # border check
                     if self.board[nexty + i][nextx + i].token == player.opponent:
                         self.board[nexty + i][nextx + i].token = " "
                     else:
@@ -190,7 +189,7 @@ class Board:
                 player.number_of_tokens -= i - 1
 
             elif nextx > currentx and nexty < currenty:
-                while (nexty - i) >= 0 or (nextx + i) < 9:
+                while (nexty - i) >= 0 and (nextx + i) < 9:
                     if self.board[nexty - i][nextx + i].token == player.opponent:
                         self.board[nexty - i][nextx + i].token = " "
                     else:
@@ -198,7 +197,7 @@ class Board:
                     i += 1
                 player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty < currenty:
-                while (nexty - i) >= 0 or (nextx - i) >= 0:
+                while (nexty - i) >= 0 and (nextx - i) >= 0:
                     if self.board[nexty - i][nextx - i].token == player.opponent:
                         self.board[nexty - i][nextx - i].token = " "
                     else:
@@ -206,7 +205,7 @@ class Board:
                     i += 1
                 player.number_of_tokens -= i - 1
             elif nextx < currentx and nexty > currenty:
-                while (nexty + i) < 5 or (nextx - i) >= 0:
+                while (nexty + i) < 5 and (nextx - i) >= 0:
                     if self.board[nexty + i][nextx - i].token == player.opponent:
                         self.board[nexty + i][nextx - i].token = " "
                     else:
@@ -245,9 +244,10 @@ class Board:
                         break
                     i += 1
                 player.number_of_tokens -= i - 1
+
         if player.attack_type == "backward":
             if nextx > currentx and nexty > currenty:
-                while (nexty - i) >= 0 and (currentx - i) >= 0:
+                while (currenty - i) >= 0 and (currentx - i) >= 0:
                     if self.board[currenty - i][currentx - i].token == player.opponent:
                         self.board[currenty - i][currentx - i].token = " "
                     else:
@@ -314,4 +314,15 @@ class Board:
             pass
 
     def display(self):
-        pprint ([[cell.token for cell in row] for row in self.board])
+        column = []
+        for row in self.board:
+            r = []
+            for cell in row:
+                if cell.token == " ":
+                    r.append(cell.token + " ")
+                elif cell.cell_colour == "b":
+                    r.append(cell.token + "+")
+                else:
+                    r.append(cell.token + "-")
+            column.append(r)
+        pprint(column)
