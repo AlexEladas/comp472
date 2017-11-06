@@ -24,7 +24,7 @@ class AI:
         self.future_board = []
         self.moves = {}
 
-    def evaluate(self,opponent, board):
+    def evaluate(self, board):
         score = 0
         for i in range(board.LENGTH):
             for j in range(board.WIDTH):
@@ -35,12 +35,14 @@ class AI:
         return score
 
     def build_tree(self, board, ai, opponent):
+        tmpai = ai.number_of_tokens
+        tmpop = opponent.number_of_tokens
         future_board = Board()
         root = Node(future_board,0,"")
         future_board.board = board.board
-        print(self.find_possible_moves(future_board, ai.colour))
+        #print(self.find_possible_moves(future_board, ai.colour))
         depth = 1
-        for move in self.possible_moves:
+        for move in self.find_possible_moves(future_board, ai.colour):
             future_board = Board()
             if depth == 1:
                 future_board.move(move, ai)
@@ -52,7 +54,7 @@ class AI:
                 #print (self.find_possible_moves(future_board, ai.opponent))
         depth = 2
         x = 1
-        print (len(root.children))
+        #print (len(root.children))
         for child in root.children:
 
             #print(self.find_possible_moves(future_board, ai.opponent))
@@ -63,11 +65,11 @@ class AI:
                 future_board.move(move, opponent)
                 if future_board.check_if_attacking_move(move, opponent):
                     future_board.attack(move, opponent)
-                future_board.display()
-                print(move)
+                #future_board.display()
+                #print(move)
                 child.add_child(Node(future_board, depth, move))
             #print(self.find_possible_moves(future_board,ai.opponent))
-        print(depth)
+        #print(depth)
         depth = 3
         for parent in root.children:
             for child in parent.children:
@@ -80,41 +82,50 @@ class AI:
                     if future_board.check_if_attacking_move(move, ai):
                         future_board.attack(move, ai)
                         #future_board.display()
-                    future_board.display()
-                    print(move)
+                    #future_board.display()
+                    #print(move)
                     child.add_child(Node(future_board, depth, move))
-                    self.find_possible_moves(future_board, ai.colour)
+                    #self.find_possible_moves(future_board, ai.colour)
                     # print (self.find_possible_moves(future_board, ai.opponent))
+        ai.number_of_tokens = tmpai
+        opponent.number_of_tokens = tmpop
         self.minimax(root, opponent)
     def minimax(self, node, opponent):
-
+        #node.board.display()
         for grandparent in node.children:
             for parent in grandparent.children:
                 for child in parent.children:
-                    child.value = self.evaluate(opponent,child.board)
-                    print(child.value)
+                    child.value = self.evaluate(child.board)
+                    #print(child.value)
                     parent.values.append(child.value)
                 #print(parent.values)
-                parent.max = max(parent.values)
-                parent.min = min(parent.values)
-                print(parent.max)
-                print(parent.min)
-                if self.minmax == "max":
-                    grandparent.values.append(parent.max)
+                try:
+                    if self.minmax == "max":
+                        parent.value = max(parent.values)
+                    if self.minmax == "min":
+                        parent.value = min(parent.values)
+                except ValueError:
+                    parent.value = self.evaluate(parent.board)
+                #print(parent.max)
+                #print(parent.min)
+                grandparent.values.append(parent.value)
+            try:
                 if self.minmax == "min":
-                    grandparent.values.append(parent.min)
-            if self.minmax == "min":
-                self.moves[max(grandparent.values)] = grandparent.move
-                node.values.append(max(grandparent.values))
-            if self.minmax == "max":
-                self.moves[min(grandparent.values)] = grandparent.move
-                node.values.append(min(grandparent.values))
+                    self.moves[max(grandparent.values)] = grandparent.move
+                    node.values.append(max(grandparent.values))
+                if self.minmax == "max":
+                    self.moves[min(grandparent.values)] = grandparent.move
+                    node.values.append(min(grandparent.values))
+            except ValueError:
+                    self.moves[self.evaluate(grandparent.board)] = grandparent.move
+                    node.values.append(self.evaluate(grandparent.board))
         if self.minmax == "max":
             node.value = max(node.values)
         if self.minmax == "min":
             node.value = min(node.values)
-        print(node.value)
-        print(self.moves[node.value])
+        self.evaluation = node.value
+        #print(node.value)
+        #print(self.moves[node.value])
 
 
     def find_possible_moves(self, board, colour):
