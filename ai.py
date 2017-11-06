@@ -10,7 +10,8 @@ class AI:
         3: "D",
         4: "E"
     }
-    def __init__(self, colour, opponent):
+    def __init__(self, colour, opponent, minmax):
+        self.minmax = ""
         self.colour = colour
         self.attack_type = ""
         self.operationx = ""
@@ -23,12 +24,14 @@ class AI:
         self.future_board = []
 
     def evaluate(self,opponent, board):
+        score = 0
         for i in range(board.LENGTH):
             for j in range(board.WIDTH):
                 if board.board[i][j].token == "G":
-                    self.evaluation += 100 * (i+1) + 50 * (j + 1)
+                    score += 100 * (i+1) + 50 * (j + 1)
                 if board.board[i][j].token == "R":
-                    self.evaluation -= 100 * (i+1) + 50 * (j + 1)
+                    score -= 100 * (i+1) + 50 * (j + 1)
+        return score
 
     def build_tree(self, board, ai, opponent):
         future_board = Board()
@@ -81,14 +84,34 @@ class AI:
                     child.add_child(Node(future_board, depth, move))
                     self.find_possible_moves(future_board, ai.colour)
                     # print (self.find_possible_moves(future_board, ai.opponent))
-        self.minimax(root,opponent )
+        self.minimax(root, opponent)
     def minimax(self, node, opponent):
 
         for grandparent in node.children:
             for parent in grandparent.children:
                 for child in parent.children:
-                    child.value.append(self.evaluate(opponent,child.board))
-                    
+                    child.value = self.evaluate(opponent,child.board)
+                    parent.values.append(child.value)
+                print(parent.values)
+                parent.max = max(parent.values)
+                parent.min = min(parent.values)
+                print(parent.max)
+                if self.minmax == "max":
+                    grandparent.values.append(parent.max)
+                if self.minmax == "min":
+                    grandparent.values.append(parent.min)
+            print(grandparent.values)
+            if self.minmax == "max":
+                node.values.append(max(grandparent.values))
+            if self.minmax == "min":
+                node.values.append(min(grandparent.values))
+        if self.minmax == "max":
+            node.value = max(node.values)
+        if self.minmax == "min":
+            node.value = min(node.values)
+        print(node.value)
+
+
 
     def find_possible_moves(self, board, colour):
         self.possible_moves = []

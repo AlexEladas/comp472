@@ -3,7 +3,10 @@ class Node:
 
     def __init__(self, board, depth, move):
         self.children = []
-        self.value = []
+        self.value = 0
+        self.values = []
+        self.max = 0
+        self.min = 0
         self.board = board
         self.depth = depth
         self.move = move
