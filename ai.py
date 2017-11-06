@@ -11,7 +11,7 @@ class AI:
         4: "E"
     }
     def __init__(self, colour, opponent, minmax):
-        self.minmax = ""
+        self.minmax = minmax
         self.colour = colour
         self.attack_type = ""
         self.operationx = ""
@@ -22,6 +22,7 @@ class AI:
         self.possible_moves = []
         self.evaluation = 0
         self.future_board = []
+        self.moves = {}
 
     def evaluate(self,opponent, board):
         score = 0
@@ -91,26 +92,29 @@ class AI:
             for parent in grandparent.children:
                 for child in parent.children:
                     child.value = self.evaluate(opponent,child.board)
+                    print(child.value)
                     parent.values.append(child.value)
-                print(parent.values)
+                #print(parent.values)
                 parent.max = max(parent.values)
                 parent.min = min(parent.values)
                 print(parent.max)
+                print(parent.min)
                 if self.minmax == "max":
                     grandparent.values.append(parent.max)
                 if self.minmax == "min":
                     grandparent.values.append(parent.min)
-            print(grandparent.values)
-            if self.minmax == "max":
-                node.values.append(max(grandparent.values))
             if self.minmax == "min":
+                self.moves[max(grandparent.values)] = grandparent.move
+                node.values.append(max(grandparent.values))
+            if self.minmax == "max":
+                self.moves[min(grandparent.values)] = grandparent.move
                 node.values.append(min(grandparent.values))
         if self.minmax == "max":
             node.value = max(node.values)
         if self.minmax == "min":
             node.value = min(node.values)
         print(node.value)
-
+        print(self.moves[node.value])
 
 
     def find_possible_moves(self, board, colour):
