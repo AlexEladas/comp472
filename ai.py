@@ -1,4 +1,6 @@
 from board import Board
+from node import Node
+import copy
 
 class AI:
     MAP = {
@@ -27,175 +29,225 @@ class AI:
                     self.evaluation += 100 * (i+1) + 50 * (j + 1)
                 if board.board[i][j].token == "R":
                     self.evaluation -= 100 * (i+1) + 50 * (j + 1)
-    def build_tree(self, board, ai):
-        tree = {}
-        self.future_board = board.board
+
+    def build_tree(self, board, ai, opponent):
+        future_board = Board()
+        root = Node(future_board,0,"")
+        future_board.board = board.board
+        print(self.find_possible_moves(future_board, ai.colour))
+        depth = 1
         for move in self.possible_moves:
-            self.future_board.move(move, ai)
-            if self.future_board.check_if_attacking_move(move, ai):
-                self.future_board.attack(move, ai)
-            tree[move] = self.future_board
-        pass
+            future_board = Board()
+            if depth == 1:
+                future_board.move(move, ai)
+                if future_board.check_if_attacking_move(move, ai):
+                    future_board.attack(move, ai)
+                #future_board.display()
+                root.add_child(Node(future_board, depth, move))
+                #self.find_possible_moves(future_board,ai.opponent)
+                #print (self.find_possible_moves(future_board, ai.opponent))
+        depth = 2
+        x = 1
+        print (len(root.children))
+        for child in root.children:
 
-    def minmax(self):
-        pass
+            #print(self.find_possible_moves(future_board, ai.opponent))
+            for move in self.find_possible_moves(child.board, ai.opponent):
+                future_board = copy.deepcopy(child.board)
+                #future_board.display()
+                #print(self.find_possible_moves(future_board, ai.opponent))
+                future_board.move(move, opponent)
+                if future_board.check_if_attacking_move(move, opponent):
+                    future_board.attack(move, opponent)
+                future_board.display()
+                print(move)
+                child.add_child(Node(future_board, depth, move))
+            #print(self.find_possible_moves(future_board,ai.opponent))
+        print(depth)
+        depth = 3
+        for parent in root.children:
+            for child in parent.children:
+                for move in self.find_possible_moves(child.board, ai.colour):
+                    future_board = copy.deepcopy(child.board)
+                #future_board.display()
+                    future_board.move(move, ai)
+                    #future_board.display()
 
-    def find_possible_moves(self, board):
+                    if future_board.check_if_attacking_move(move, ai):
+                        future_board.attack(move, ai)
+                        #future_board.display()
+                    future_board.display()
+                    print(move)
+                    child.add_child(Node(future_board, depth, move))
+                    self.find_possible_moves(future_board, ai.colour)
+                    # print (self.find_possible_moves(future_board, ai.opponent))
+        self.minimax(root,opponent )
+    def minimax(self, node, opponent):
+
+        for grandparent in node.children:
+            for parent in grandparent.children:
+                for child in parent.children:
+                    child.value.append(self.evaluate(opponent,child.board))
+                    
+
+    def find_possible_moves(self, board, colour):
+        self.possible_moves = []
         for i in range(board.LENGTH):
             for j in range(board.WIDTH):
                 if board.board[i][j].token == " ":
                     if i == 0 and j == 0:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1]+str(j+1)+" "+self.MAP[i]+str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i]+str(j+1+1)+" "+self.MAP[i]+str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1]+str(j+1)+" "+self.MAP[i]+str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i]+str(j+1+1)+" "+self.MAP[i]+str(j+1))
-                            if board.board[i+1][j+1].token == self.colour:
+                            if board.board[i+1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i+1]+str(j+1+1)+" "+self.MAP[i]+str(j+1))
                     elif i == 4 and j == 8:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i ] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j-1].token == self.colour:
+                            if board.board[i-1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
                     elif i == 0 and j == 8:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
-                                self.possible_moves.append(self.MAP[i - 1] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
+                                self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
+                            if board.board[i+1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
                     elif i == 4 and j == 0:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j+1].token == self.colour:
+                            if board.board[i-1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
                     elif i == 0:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j+1].token == self.colour:
+                            if board.board[i+1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j + 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j-1].token == self.colour:
+                            if board.board[i+1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
                     elif j == 0:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j+1].token == self.colour:
+                            if board.board[i+1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j + 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j+1].token == self.colour:
+                            if board.board[i-1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j + 1+1) + " " + self.MAP[i] + str(j+1))
                     elif i == 4:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j+1].token == self.colour:
+                            if board.board[i-1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j-1].token == self.colour:
+                            if board.board[i-1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
                     elif j == 8:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-2+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j-1].token == self.colour:
+                            if board.board[i+1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j-1].token == self.colour:
-                                self.possible_moves.append(self.MAP[i - 1] + str(j - 1+1) + " " + self.MAP[i] + str(j))
+                            if board.board[i-1][j-1].token == colour:
+                                self.possible_moves.append(self.MAP[i - 1] + str(j - 1+1) + " " + self.MAP[i] + str(j + 1))
                     else:
                         if board.board[i][j].cell_colour == "w":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
-                            if board.board[i+1][j].token == self.colour:
+                            if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j].token == self.colour:
+                            if board.board[i-1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j+1].token == self.colour:
+                            if board.board[i][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i][j-1].token == self.colour:
+                            if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j+1].token == self.colour:
+                            if board.board[i+1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j + 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i+1][j-1].token == self.colour:
+                            if board.board[i+1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i + 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j+1].token == self.colour:
+                            if board.board[i-1][j+1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j + 1+1) + " " + self.MAP[i] + str(j+1))
-                            if board.board[i-1][j-1].token == self.colour:
+                            if board.board[i-1][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i - 1] + str(j - 1+1) + " " + self.MAP[i] + str(j+1))
+        return self.possible_moves
