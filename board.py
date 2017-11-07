@@ -13,7 +13,13 @@ class Board:
             "D": 3,
             "E": 4
           }
-
+    MAP2 = {
+        0: "A",
+        1: "B",
+        2: "C",
+        3: "D",
+        4: "E"
+    }
     def __init__(self):
         self.non_attacking_moves = 0
         column = []
@@ -314,9 +320,9 @@ class Board:
             pass
 
     def display(self):
-        column = []
-        for row in self.board:
-            r = []
+        column = [[" ","1 ","2 ","3 ","4 ","5 ","6 ","7 ","8 ","9 "]]
+        for i,row in enumerate(self.board):
+            r = [self.MAP2[i]]
             for cell in row:
                 if cell.token == " ":
                     r.append(cell.token + " ")

@@ -35,70 +35,46 @@ class AI:
         return score
 
     def build_tree(self, board, ai, opponent):
-        tmpai = ai.number_of_tokens
+        tmpai = ai.number_of_tokens # For resetting at the end of tree. Used for win condition
         tmpop = opponent.number_of_tokens
-        future_board = Board()
-        root = Node(future_board,0,"")
+        future_board = copy.deepcopy(board)
+        root = Node(future_board,"")
         future_board.board = board.board
-        #print(self.find_possible_moves(future_board, ai.colour))
-        depth = 1
-        for move in self.find_possible_moves(future_board, ai.colour):
-            future_board = Board()
-            if depth == 1:
-                future_board.move(move, ai)
-                if future_board.check_if_attacking_move(move, ai):
-                    future_board.attack(move, ai)
-                #future_board.display()
-                root.add_child(Node(future_board, depth, move))
-                #self.find_possible_moves(future_board,ai.opponent)
-                #print (self.find_possible_moves(future_board, ai.opponent))
-        depth = 2
-        x = 1
-        #print (len(root.children))
-        for child in root.children:
 
-            #print(self.find_possible_moves(future_board, ai.opponent))
+        for move in self.find_possible_moves(future_board, ai.colour):
+            future_board = copy.deepcopy(board)
+            future_board.move(move, ai)
+            if future_board.check_if_attacking_move(move, ai):
+                future_board.attack(move, ai)
+            root.add_child(Node(future_board, move))
+
+        for child in root.children:
             for move in self.find_possible_moves(child.board, ai.opponent):
                 future_board = copy.deepcopy(child.board)
-                #future_board.display()
-                #print(self.find_possible_moves(future_board, ai.opponent))
+
                 future_board.move(move, opponent)
                 if future_board.check_if_attacking_move(move, opponent):
                     future_board.attack(move, opponent)
-                #future_board.display()
-                #print(move)
-                child.add_child(Node(future_board, depth, move))
-            #print(self.find_possible_moves(future_board,ai.opponent))
-        #print(depth)
-        depth = 3
+                child.add_child(Node(future_board, move))
+
         for parent in root.children:
             for child in parent.children:
                 for move in self.find_possible_moves(child.board, ai.colour):
                     future_board = copy.deepcopy(child.board)
-                #future_board.display()
                     future_board.move(move, ai)
-                    #future_board.display()
-
                     if future_board.check_if_attacking_move(move, ai):
                         future_board.attack(move, ai)
-                        #future_board.display()
-                    #future_board.display()
-                    #print(move)
-                    child.add_child(Node(future_board, depth, move))
-                    #self.find_possible_moves(future_board, ai.colour)
-                    # print (self.find_possible_moves(future_board, ai.opponent))
+                    child.add_child(Node(future_board, move))
         ai.number_of_tokens = tmpai
         opponent.number_of_tokens = tmpop
-        self.minimax(root, opponent)
-    def minimax(self, node, opponent):
-        #node.board.display()
+        self.minimax(root)
+
+    def minimax(self, node):
         for grandparent in node.children:
             for parent in grandparent.children:
                 for child in parent.children:
                     child.value = self.evaluate(child.board)
-                    #print(child.value)
                     parent.values.append(child.value)
-                #print(parent.values)
                 try:
                     if self.minmax == "max":
                         parent.value = max(parent.values)
@@ -106,8 +82,6 @@ class AI:
                         parent.value = min(parent.values)
                 except ValueError:
                     parent.value = self.evaluate(parent.board)
-                #print(parent.max)
-                #print(parent.min)
                 grandparent.values.append(parent.value)
             try:
                 if self.minmax == "min":
@@ -124,8 +98,6 @@ class AI:
         if self.minmax == "min":
             node.value = min(node.values)
         self.evaluation = node.value
-        #print(node.value)
-        #print(self.moves[node.value])
 
 
     def find_possible_moves(self, board, colour):
@@ -162,7 +134,7 @@ class AI:
                     elif i == 0 and j == 8:
                         if board.board[i][j].cell_colour == "w":
                             if board.board[i+1][j].token == colour:
-                                self.possible_moves.append(self.MAP[i] + str(j+1) + " " + self.MAP[i] + str(j+1))
+                                self.possible_moves.append(self.MAP[i+1] + str(j+1) + " " + self.MAP[i] + str(j+1))
                             if board.board[i][j-1].token == colour:
                                 self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
@@ -214,7 +186,7 @@ class AI:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
                             if board.board[i][j+1].token == colour:
-                                self.possible_moves.append(self.MAP[i] + str(j+1) + " " + self.MAP[i] + str(j+1))
+                                self.possible_moves.append(self.MAP[i] + str(j+1+1) + " " + self.MAP[i] + str(j+1))
                             if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
                             if board.board[i-1][j].token == colour:
@@ -252,7 +224,7 @@ class AI:
                                 self.possible_moves.append(self.MAP[i-1] + str(j+1) + " " + self.MAP[i] + str(j+1))
                         elif board.board[i][j].cell_colour == "b":
                             if board.board[i][j-1].token == colour:
-                                self.possible_moves.append(self.MAP[i] + str(j-2+1) + " " + self.MAP[i] + str(j+1))
+                                self.possible_moves.append(self.MAP[i] + str(j-1+1) + " " + self.MAP[i] + str(j+1))
                             if board.board[i+1][j].token == colour:
                                 self.possible_moves.append(self.MAP[i+1] + str(j + 1) + " " + self.MAP[i] + str(j+1))
                             if board.board[i-1][j].token == colour:
