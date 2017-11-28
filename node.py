@@ -1,9 +1,8 @@
-from board import Board
 class Node:
 
     def __init__(self, board, move):
         self.children = []
-        self.value = 0
+        self.value = None
         self.values = []
         self.max = 0
         self.min = 0
